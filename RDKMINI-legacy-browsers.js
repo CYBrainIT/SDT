@@ -13,8 +13,6 @@ let expInfo = {
 };
 
 // Start code blocks for 'Before Experiment'
-// Run 'Before Experiment' code from code_2
-console.log("🔍 当前 x_scale =", x_scale);  // ✅ 输出 x_scale 的值
 window.keyDuration_global = 9999;
 
 // init psychoJS:
