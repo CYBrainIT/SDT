@@ -79,6 +79,9 @@ flowScheduler.add(trialsLoopEnd);
 
 
 
+flowScheduler.add(exitRoutineRoutineBegin());
+flowScheduler.add(exitRoutineRoutineEachFrame());
+flowScheduler.add(exitRoutineRoutineEnd());
 flowScheduler.add(quitPsychoJS, '', true);
 
 // quit if user presses Cancel in dialog box:
@@ -187,6 +190,8 @@ var feedback_2_T;
 var feedback_3_T;
 var feedback_4_T;
 var feedback_5_T;
+var exitRoutineClock;
+var text_2;
 var globalClock;
 var routineTimer;
 async function experimentInit() {
@@ -531,6 +536,20 @@ async function experimentInit() {
     lineColor: new util.Color('white'),
     fillColor: new util.Color('white'),
     opacity: 1, depth: -7, interpolate: true,
+  });
+  
+  // Initialize components for Routine "exitRoutine"
+  exitRoutineClock = new util.Clock();
+  text_2 = new visual.TextStim({
+    win: psychoJS.window,
+    name: 'text_2',
+    text: 'Please wait while we save your data...',
+    font: 'Open Sans',
+    units: undefined, 
+    pos: [0, 0], height: 0.05,  wrapWidth: undefined, ori: 0.0,
+    languageStyle: 'LTR',
+    color: new util.Color('white'),  opacity: undefined,
+    depth: -1.0 
   });
   
   // Create some handy timers
@@ -2385,6 +2404,127 @@ function Feedback_TimeRoutineEnd(snapshot) {
 }
 
 
+var exitRoutineComponents;
+function exitRoutineRoutineBegin(snapshot) {
+  return async function () {
+    TrialHandler.fromSnapshot(snapshot); // ensure that .thisN vals are up to date
+    
+    //--- Prepare to start Routine 'exitRoutine' ---
+    t = 0;
+    exitRoutineClock.reset(); // clock
+    frameN = -1;
+    continueRoutine = true; // until we're told otherwise
+    // update component parameters for each repeat
+    psychoJS.experiment.addData('exitRoutine.started', globalClock.getTime());
+    // Run 'Begin Routine' code from code_3
+    // 禁止浏览器自动下载 csv
+    psychoJS._saveResults = 0;
+    
+    // 创建文件名
+    let filename = psychoJS._experiment._experimentName + '_' + psychoJS._experiment._datetime + '.csv';
+    
+    // 获取实验 trial 数据
+    let dataObj = psychoJS._experiment._trialsData;
+    
+    // 转换成 CSV 字符串格式
+    let data = [Object.keys(dataObj[0])].concat(dataObj.map(it => Object.values(it).toString())).join('\n');
+    
+    // 向 OSF 服务器发送 POST 请求
+    fetch('https://pipe.jspsych.org/api/data', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': '*/*',
+      },
+      body: JSON.stringify({
+        experimentID: 'YM36N32aTB1r', // <- 👈 在 OSF DataPipe 创建项目后替换这里
+        filename: filename,
+        data: data,
+      }),
+    })
+    .then(response => response.json())
+    .then(data => {
+      console.log(data);
+      quitPsychoJS();
+    });
+    
+    // keep track of which components have finished
+    exitRoutineComponents = [];
+    exitRoutineComponents.push(text_2);
+    
+    for (const thisComponent of exitRoutineComponents)
+      if ('status' in thisComponent)
+        thisComponent.status = PsychoJS.Status.NOT_STARTED;
+    return Scheduler.Event.NEXT;
+  }
+}
+
+
+function exitRoutineRoutineEachFrame() {
+  return async function () {
+    //--- Loop for each frame of Routine 'exitRoutine' ---
+    // get current time
+    t = exitRoutineClock.getTime();
+    frameN = frameN + 1;// number of completed frames (so 0 is the first frame)
+    // update/draw components on each frame
+    
+    // *text_2* updates
+    if (t >= 0.0 && text_2.status === PsychoJS.Status.NOT_STARTED) {
+      // keep track of start time/frame for later
+      text_2.tStart = t;  // (not accounting for frame time here)
+      text_2.frameNStart = frameN;  // exact frame index
+      
+      text_2.setAutoDraw(true);
+    }
+    
+    // check for quit (typically the Esc key)
+    if (psychoJS.experiment.experimentEnded || psychoJS.eventManager.getKeys({keyList:['escape']}).length > 0) {
+      return quitPsychoJS('The [Escape] key was pressed. Goodbye!', false);
+    }
+    
+    // check if the Routine should terminate
+    if (!continueRoutine) {  // a component has requested a forced-end of Routine
+      return Scheduler.Event.NEXT;
+    }
+    
+    continueRoutine = false;  // reverts to True if at least one component still running
+    for (const thisComponent of exitRoutineComponents)
+      if ('status' in thisComponent && thisComponent.status !== PsychoJS.Status.FINISHED) {
+        continueRoutine = true;
+        break;
+      }
+    
+    // refresh the screen if continuing
+    if (continueRoutine) {
+      return Scheduler.Event.FLIP_REPEAT;
+    } else {
+      return Scheduler.Event.NEXT;
+    }
+  };
+}
+
+
+function exitRoutineRoutineEnd(snapshot) {
+  return async function () {
+    //--- Ending Routine 'exitRoutine' ---
+    for (const thisComponent of exitRoutineComponents) {
+      if (typeof thisComponent.setAutoDraw === 'function') {
+        thisComponent.setAutoDraw(false);
+      }
+    }
+    psychoJS.experiment.addData('exitRoutine.stopped', globalClock.getTime());
+    // the Routine "exitRoutine" was not non-slip safe, so reset the non-slip timer
+    routineTimer.reset();
+    
+    // Routines running outside a loop should always advance the datafile row
+    if (currentLoop === psychoJS.experiment) {
+      psychoJS.experiment.nextEntry(snapshot);
+    }
+    return Scheduler.Event.NEXT;
+  }
+}
+
+
 function importConditions(currentLoop) {
   return async function () {
     psychoJS.importAttributes(currentLoop.getCurrentTrial());
@@ -2398,6 +2538,8 @@ async function quitPsychoJS(message, isCompleted) {
   if (psychoJS.experiment.isEntryEmpty()) {
     psychoJS.experiment.nextEntry();
   }
+  
+  
   
   
   
