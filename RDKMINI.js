@@ -2404,6 +2404,7 @@ function Feedback_TimeRoutineEnd(snapshot) {
 }
 
 
+var data;
 var exitRoutineComponents;
 function exitRoutineRoutineBegin(snapshot) {
   return async function () {
@@ -2417,19 +2418,28 @@ function exitRoutineRoutineBegin(snapshot) {
     // update component parameters for each repeat
     psychoJS.experiment.addData('exitRoutine.started', globalClock.getTime());
     // Run 'Begin Routine' code from code_3
-    // 禁止浏览器自动下载 csv
+    // 禁止浏览器自动下载 CSV 文件
     psychoJS._saveResults = 0;
     
-    // 创建文件名
-    let filename = psychoJS._experiment._experimentName + '_' + psychoJS._experiment._datetime + '.csv';
+    // 创建唯一文件名，带时间戳
+    let filename = psychoJS._experiment._experimentName + '_' +
+                   new Date().toISOString().replace(/[:.]/g, '-') + '.csv';
     
     // 获取实验 trial 数据
     let dataObj = psychoJS._experiment._trialsData;
     
-    // 转换成 CSV 字符串格式
-    let data = [Object.keys(dataObj[0])].concat(dataObj.map(it => Object.values(it).toString())).join('\n');
+    let data = '';
+    if (dataObj && dataObj.length > 0) {
+      data = [Object.keys(dataObj[0])]
+               .concat(dataObj.map(it => Object.values(it).toString()))
+               .join('\n');
+    } else {
+      console.warn("⚠️ 没有收集到试次数据，将上传空文件");
+    }
     
-    // 向 OSF 服务器发送 POST 请求
+    // 发送到 jsPsych DataPipe
+    console.log("📡 正在上传数据到 jsPsych DataPipe...");
+    
     fetch('https://pipe.jspsych.org/api/data', {
       method: 'POST',
       headers: {
@@ -2437,14 +2447,22 @@ function exitRoutineRoutineBegin(snapshot) {
         'Accept': '*/*',
       },
       body: JSON.stringify({
-        experimentID: 'YM36N32aTB1r', // <- 👈 在 OSF DataPipe 创建项目后替换这里
+        experimentID: 'YM36N32aTB1r',  // ✅ 替换为你 DataPipe 上的真实 ID
         filename: filename,
         data: data,
       }),
     })
     .then(response => response.json())
-    .then(data => {
-      console.log(data);
+    .then(result => {
+      console.log("✅ 上传成功：", result);
+      // 等 1 秒，确保上传完成再退出
+      setTimeout(() => {
+        quitPsychoJS();
+      }, 1000);
+    })
+    .catch(error => {
+      console.error("❌ 数据上传失败：", error);
+      // 即便失败也正常结束实验
       quitPsychoJS();
     });
     
