@@ -2389,6 +2389,10 @@ function Feedback_TimeRoutineEnd(snapshot) {
     color_5 = [1, 1, 1];
     
     psychoJS.eventManager.clearEvents({"eventType": "keyboard"});
+    // 在 Response routine 的 End Routine 中加上：
+    psychoJS.experiment.addData('keyDuration', keyDuration);
+    psychoJS.experiment.addData('TimeDur', TimeDur);
+    psychoJS.experiment.addData('relErr', relErr);
     
     // the Routine "Feedback_Time" was not non-slip safe, so reset the non-slip timer
     routineTimer.reset();
@@ -2416,6 +2420,13 @@ function exitRoutineRoutineBegin(snapshot) {
     psychoJS.experiment.addData('exitRoutine.started', globalClock.getTime());
     // === 禁止结果自动下载到浏览器 ===
     psychoJS.saveResults = false;
+    // 上传前将数据转为 csv
+    let trialsData = psychoJS.experiment._trialsData;
+    let csvContent = [
+      Object.keys(trialsData[0]).join(",")
+    ].concat(
+      trialsData.map(row => Object.values(row).join(","))
+    ).join("\n");
     
     // === 生成文件名 ===
     let filename = psychoJS._experiment._experimentName + '_' + psychoJS._experiment._datetime + '.csv';
