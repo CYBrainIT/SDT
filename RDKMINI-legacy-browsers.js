@@ -469,13 +469,13 @@ async function experimentInit() {
   text_2 = new visual.TextStim({
     win: psychoJS.window,
     name: 'text_2',
-    text: 'Please wait while we save your data...',
+    text: 'Please wait while we save your results...',
     font: 'Open Sans',
     units: undefined, 
     pos: [0, 0], height: 0.05,  wrapWidth: undefined, ori: 0.0,
     languageStyle: 'LTR',
     color: new util.Color('white'),  opacity: undefined,
-    depth: -1.0 
+    depth: 0.0 
   });
   
   // Create some handy timers
@@ -2285,37 +2285,35 @@ function exitRoutineRoutineBegin(snapshot) {
     continueRoutine = true; // until we're told otherwise
     // update component parameters for each repeat
     psychoJS.experiment.addData('exitRoutine.started', globalClock.getTime());
-    // Run 'Begin Routine' code from code_3
-    // 禁止浏览器自动下载 CSV 文件
+    // ✅ 禁用浏览器自动保存结果
     psychoJS._saveResults = 0;
     
-    // 获取实验名称和参与者信息
+    // ✅ 获取实验信息
     let expName = psychoJS.config?.experiment?.name || "experiment";
     let expInfo = psychoJS.experiment?.extraInfo || {};
     let participant = expInfo["participant"] || "unknown";
     let date = expInfo["date"] || new Date().toISOString().split("T")[0];
     
-    // ✅ 创建文件名（与你 settings 中设置一致）
+    // ✅ 创建带时间戳的唯一文件名
     let filename = `data/${participant}_${expName}_${date}.csv`;
-    console.log("📄 生成文件名为：", filename);
+    console.log("📄 生成文件名:", filename);
     
-    // ✅ 获取实验 trial 数据
+    // ✅ 获取 trial 数据
     let dataObj = psychoJS._experiment?._trialsData || [];
-    console.log("📊 获取 trial 数据，共", dataObj.length, "条");
+    console.log(`📊 获取 trial 数据，共 ${dataObj.length} 条`);
     
-    // ✅ 转换成 CSV 字符串格式
     let data = '';
     if (dataObj.length > 0) {
       const headers = Object.keys(dataObj[0]);
-      const rows = dataObj.map(it => headers.map(h => it[h]).join(','));
+      const rows = dataObj.map(row => headers.map(h => row[h]).join(','));
       data = [headers.join(',')].concat(rows).join('\n');
     } else {
       console.warn("⚠️ 没有收集到试次数据，将上传空文件");
       data = "no_data_collected\n";
     }
     
-    // ✅ 发送到 jsPsych DataPipe
-    console.log("📡 正在上传数据到 jsPsych DataPipe...");
+    // ✅ 开始上传
+    console.log("📡 正在上传至 jsPsych DataPipe...");
     
     fetch('https://pipe.jspsych.org/api/data', {
       method: 'POST',
@@ -2324,21 +2322,21 @@ function exitRoutineRoutineBegin(snapshot) {
         'Accept': '*/*',
       },
       body: JSON.stringify({
-        experimentID: 'YM36N32aTB1r',  // ✅ 替换为你在 DataPipe 上注册的 experiment ID
+        experimentID: 'YM36N32aTB1r',  // ⚠️ 替换为你的真实 DataPipe ID
         filename: filename,
         data: data,
       }),
     })
     .then(response => response.json())
     .then(result => {
-      console.log("✅ 上传成功！服务器响应：", result);
+      console.log("✅ 上传成功，服务器返回：", result);
       setTimeout(() => {
         quitPsychoJS();
-      }, 1000);
+      }, 1000);  // 稍等一会再退出，避免异步未完成
     })
     .catch(error => {
       console.error("❌ 上传失败：", error);
-      quitPsychoJS(); // 即使失败也退出实验
+      quitPsychoJS(); // 失败也继续退出实验
     });
     
     // keep track of which components have finished
