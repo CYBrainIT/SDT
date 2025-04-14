@@ -2284,13 +2284,7 @@ function exitRoutineRoutineBegin(snapshot) {
     psychoJS.experiment.addData('exitRoutine.started', globalClock.getTime());
     // === 禁止结果自动下载到浏览器 ===
     psychoJS.saveResults = false;
-    // 上传前将数据转为 csv
-    let trialsData = psychoJS.experiment._trialsData;
-    let csvContent = [
-      Object.keys(trialsData[0]).join(",")
-    ].concat(
-      trialsData.map(row => Object.values(row).join(","))
-    ).join("\n");
+    
     
     // === 生成文件名 ===
     let filename = psychoJS._experiment._experimentName + '_' + psychoJS._experiment._datetime + '.csv';
